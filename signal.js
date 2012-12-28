@@ -1,203 +1,188 @@
-;(function() {
-    Signal = {
-        __version__: '0.0.1',
-        __ver__: [0, 0, 1],
-        __author__: 'Ye Liu',
-        __contact__: 'yeliu@instast.com',
-        __license__: 'BSD',
-        __copyright__: 'Copyright (c) 2012 Ye Liu'
+var Signal = {
+    __version__: '0.0.1',
+    __ver__: [0, 0, 1],
+    __author__: 'Ye Liu',
+    __contact__: 'yeliu@instast.com',
+    __license__: 'BSD',
+    __copyright__: 'Copyright (c) 2012 Ye Liu'
+};
+
+(function() {
+    /* ----- User Configurable Properties ----- */
+
+    Signal.allowDuplicateSlots = false;
+
+    Signal.isSenderCompatible = function(x, y) {
+        return x === y;
     };
 
-    /* ----- Functions for Object Types ----- */
 
-    var toString = Object.prototype.toString;
+    /* ----- General Helper Functions ----- */
 
-    var isObject = function(o) {
-        if (toString.call(null) === '[object Object]') {
-            return o !== null && o !== undefined && toString.call(o) === '[object Object]';
-        }
-        return toString.call(o) === '[object Object]';
+    /*
+     * The following `isX` functions are copied from ExtJS 4.1, see
+     * http://docs.sencha.com/ext-js/4-1/source/Ext.html for details.
+     */
+    var isFunction = (document !== undefined && typeof document.getElementByTagName('body') === 'function') ?
+    function(o) {
+        return Object.prototype.toString.call(o) === '[object Function]';
+    } :
+    function(o) {
+        return typeof o === 'function';
     };
 
-    var isString = function(o) {
-        return typeof o === 'string';
-    };
+    function emptyFn() {
+    }
 
-    var getType = function(o) {
-    };
+
+    /* ----- Helper Functions ----- */
 
     var objIdSeq = 1;
 
-    var mark = function(o) {
+    function mark(o) {
         if (!o._signalObjId) {
             o._signalObjId = objIdSeq++;
         }
         return o;
-    };
+    }
 
-    var unmark = function(o) {
+    function unmark(o) {
         delete o._signalObjId;
         return o;
     };
 
-    var compareObj = function(x, y) {
+    function compareObj(x, y) {
         if (x._signalObjId && y._signalObjId) {
             return x._signalObjId === y._signalObjId;
         }
         return x === y;
     };
 
+
+    /* ----- Slot ----- */
+
     var slotIdSeq = 0;
 
-    Signal.Slot = function(fn, receiver, sender) {
+    function Slot(fn, receiver, sender) {
         this.id = slotIdSeq++;
-        this._fn = fn || function() {};
+        this._fn = fn || emptyFn;
         this._receiver = receiver || null;
         this._sender = sender || null;
-    };
+    }
 
-    Signal.Slot.prototype.call = function() {
+    Slot.prototype.call = function() {
         return this._fn.apply(this._receiver, arguments);
     };
 
-    Signal.Slot.prototype.isEqual = function(o) {
-        return this.equals(o, compareObj, compareObj);
+    Slot.prototype.isEqual = function(o) {
+        return this._compare(o, compareObj, compareObj);
     };
 
-    Signal.Slot.prototype.isCompatible = function(o) {
-        var self = this;
-        return self.equals(o, compareObj, function(mySender, otherSender) {
-            return self.isSenderCompatible(otherSender);
-        });
+    Slot.prototype.isCompatible = function(o) {
+        return this._compare(o, compareObj, Signal.isSenderCompatible);
     };
 
-    Signal.Slot.prototype.isSenderCompatible = function(otherSender) {
-        if (!this._sender) {
-            return true;
-        }
-
-        if (!otherSender) {
+    Slot.prototype._compare = function(o, compareReceiver, compareSender) {
+        if (!(o instanceof Slot)) {
             return false;
         }
 
-        if (!compareObj(this._sender, otherSender)) {
-            if (isString(this._sender) && isObject(otherSender)) {
-                return mySender === Ext.getClassName(otherSender);
-            }
+        if (this === o || this.id === o.id) {
+            return true;
+        }
 
-            if (Ext.isString(otherSender) && Ext.isObject(mySender)) {
-                return otherSender === Ext.getClassName(mySender);
-            }
+        if (this._fn !== o._fn) {
+            return false;
+        }
 
+        if (isFunction(compareReceiver) && !compareReceiver(this._receiver, o._receiver)) {
+            return false;
+        }
+
+        if (isFunction(compareSender) && !compareSender(this._sender, o._sender)) {
             return false;
         }
 
         return true;
     };
 
-   Signal.Slot.prototype.equals = function(o, compareReceiverFn, compareSenderFn) {
-        if (!Ext.isObject(o)) {
-            return false;
-        }
+    Slot.prototype.isSenderCompatible = function(sender) {
+        var isSenderCompatible = Signal.isSenderCompatible;
 
-        if (this === o) {
-            return true;
+        if (isFunction(isSenderCompatible)) {
+            return isSenderCompatible(this._sender, sender);
         }
+        return this._sender === sender;
+    };
 
-        if (Ext.getClassName(this) === Ext.getClassName(o)) {
-            if (this.id === o.id) {
-                return true;
-            }
-            if (this.getFn() !== o.getFn()) {
-                return false;
-            }
-            if (Ext.isFunction(compareReceiverFn) && !compareReceiverFn(this.getReceiver(), o.getReceiver())) {
-                return false;
-            }
-            if (Ext.isFunction(compareSenderFn) && !compareSenderFn(this.getSender(), o.getSender())) {
-                return false;
-            }
-            return true;
-        }
+    Signal.Slot = Slot;
 
-        return false;
+
+    /* ----- BaseSignal ----- */
+
+    function BaseSignal() {
+        this.slots = [];
     }
 
-    Ext.define('InfoFlo.signal.BaseSignal', {
-        slots: undefined,
+    BaseSignal.prototype.connect = function(slotFn, receiver, sender) {
+        var newSlot;
 
-        statics: {
-        },
+        mark(receiver);
+        mark(sender);
 
-        constructor: function() {
-            this.slots = [];
-        },
+        newSlot = new Slot(slotFn, receiver, sender);
 
-        connect: function(slotFn, receiver, sender) {
-            var newSlot;
-
-            InfoFlo.signal.BaseSignal.mark(receiver);
-            InfoFlo.signal.BaseSignal.mark(sender);
-            
-            newSlot = Ext.create('InfoFlo.signal.Slot', {
-                fn: slotFn,
-                receiver: receiver,
-                sender: sender
-            });
-
-            for (var i = 0; i < this.slots.length; i++) {
+        if (!Signal.allowDuplicateSlots) {
+            for (var i = this.slots.length; i >= 0; i--) {
                 if (this.slots[i].isEqual(newSlot)) {
                     return this.slots[i];
                 }
             }
-
-            this.slots.push(newSlot);
-
-            return newSlot;
-        },
-
-        emit: function(sender) {
-            var slot;
-
-            for (var i = 0; i < this.slots.length; i++) {
-                slot = this.slots[i];
-                if (slot.isSenderCompatible(sender)) {
-                    slot.call.apply(slot, arguments);
-                }
-            }
-        },
-
-        emitAsync: function(sender) {
-            var me = this;
-            var args = arguments;
-
-            setTimeout(function() {
-                me.emit.apply(me, args);
-            }, 1);
-        },
-
-        disconnect: function(slotFn, receiver, sender) {
-            return this.disconnectBySlot(Ext.create('InfoFlo.signal.Slot', {
-                fn: slotFn,
-                receiver: receiver,
-                sender: sender
-            }));
-        },
-
-        disconnectBySlot: function(slot) {
-            var i = 0;
-            var ret = null;
-
-            while (i < this.slots.length) {
-                if (this.slots[i] === slot || this.slots[i].isEqual(slot)) {
-                    ret = this.slots.splice(i, 1);
-                }
-                else {
-                    i++;
-                }
-            }
-
-            return ret ? ret[0] : null;
         }
-    });
+
+        this.slots.push(newSlot);
+        return newSlot;
+    };
+
+    BaseSignal.prototype.emit = function(sender) {
+        var slot;
+
+        for (var i = 0; i < this.slots.length; i++) {
+            slot = this.slots[i];
+            if (slot.isSenderCompatible(sender)) {
+                slot.call.apply(slot, arguments);
+            }
+        }
+    };
+
+    BaseSignal.prototype.emitAsync = function(sender) {
+        var self = this;
+        var args = arguments;
+
+        setTimeout(function() {
+            self.emit.apply(self, args);
+        }, 1);
+    };
+
+    BaseSignal.prototype.disconnect = function(slotFn, receiver, sender) {
+        return this.disconnectBySlot(new Slot(slotFn, receiver, sender));
+    };
+
+    BaseSignal.prototype.disconnectBySlot = function(slot) {
+        var i = 0;
+        var ret = null;
+
+        while (i < this.slots.length) {
+            if (this.slots[i].isEqual(slot)) {
+                ret = this.slots.splice(i, 1);
+            }
+            else {
+                i++;
+            }
+        }
+
+        return ret ? ret[0] : null;
+    };
+
+    Signal.BaseSignal = BaseSignal;
 })();
