@@ -405,6 +405,28 @@ describe('Signal.markObj', function() {
         expect(o._signalObjId).toBeDefined();
     });
 
+    it('will not change one object\'s mark', function() {
+        var o = {};
+        var mark1;
+        var mark2;
+
+        Signal.markObj(o);
+        mark1 = o._signalObjId;
+        Signal.markObj(o);
+        mark2 = o._signalObjId;
+
+        expect(mark1).toEqual(mark2);
+    });
+
+    it('marks different objects with different IDs', function() {
+        var o1 = {};
+        var o2 = {};
+
+        Signal.markObj(o1);
+        Signal.markObj(o2);
+
+        expect(o1._signalObjId).not.toEqual(o2._signalObjId);
+    });
 });
 
 describe('Signal.unmarkObj', function() {
