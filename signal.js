@@ -19,44 +19,57 @@ var Signal = {
 
     /* ----- General Helper Functions ----- */
 
+    var toString = Object.prototype.toString;
+
     /*
      * The following `isX` functions are copied from ExtJS 4.1, see
      * http://docs.sencha.com/ext-js/4-1/source/Ext.html for details.
      */
-    var isFunction = (document !== undefined && typeof document.getElementByTagName('body') === 'function') ?
+    var isObject = (toString.call(null) === '[object Object]') ?
     function(o) {
-        return Object.prototype.toString.call(o) === '[object Function]';
+        return o !== null && o !== undefined && toString.call(o) === '[object Object]';
+    } :
+    function(o) {
+        return toString.call(o) === '[object Object]';
+    };
+
+    var isFunction = (document !== undefined && typeof document.getElementsByTagName('body') === 'function') ?
+    function(o) {
+        return toString.call(o) === '[object Function]';
     } :
     function(o) {
         return typeof o === 'function';
     };
 
-    function emptyFn() {
-    }
+    function emptyFn() {}
 
 
     /* ----- Helper Functions ----- */
 
     var objIdSeq = 1;
 
-    function mark(o) {
-        if (!o._signalObjId) {
+    function markObj(o) {
+        if (isObject(o) && !o._signalObjId) {
             o._signalObjId = objIdSeq++;
         }
         return o;
     }
 
-    function unmark(o) {
-        delete o._signalObjId;
+    function unmarkObj(o) {
+        if (isObject(o)) {
+            delete o._signalObjId;
+        }
         return o;
-    };
+    }
 
     function compareObj(x, y) {
-        if (x._signalObjId && y._signalObjId) {
-            return x._signalObjId === y._signalObjId;
+        if (isObject(x) && isObject(y)) {
+            if (x._signalObjId && y._signalObjId) {
+                return x._signalObjId === y._signalObjId;
+            }
         }
         return x === y;
-    };
+    }
 
 
     /* ----- Slot ----- */
@@ -75,14 +88,23 @@ var Signal = {
     };
 
     Slot.prototype.isEqual = function(o) {
-        return this._compare(o, compareObj, compareObj);
+        return this.compare(o, compareObj, compareObj);
     };
 
     Slot.prototype.isCompatible = function(o) {
-        return this._compare(o, compareObj, Signal.isSenderCompatible);
+        return this.compare(o, compareObj, Signal.isSenderCompatible);
     };
 
-    Slot.prototype._compare = function(o, compareReceiver, compareSender) {
+    Slot.prototype.isSenderCompatible = function(sender) {
+        var isSenderCompatible = Signal.isSenderCompatible;
+
+        if (isFunction(isSenderCompatible)) {
+            return isSenderCompatible(this._sender, sender);
+        }
+        return this._sender === sender;
+    };
+
+    Slot.prototype.compare = function(o, compareReceiver, compareSender) {
         if (!(o instanceof Slot)) {
             return false;
         }
@@ -106,17 +128,6 @@ var Signal = {
         return true;
     };
 
-    Slot.prototype.isSenderCompatible = function(sender) {
-        var isSenderCompatible = Signal.isSenderCompatible;
-
-        if (isFunction(isSenderCompatible)) {
-            return isSenderCompatible(this._sender, sender);
-        }
-        return this._sender === sender;
-    };
-
-    Signal.Slot = Slot;
-
 
     /* ----- BaseSignal ----- */
 
@@ -127,13 +138,13 @@ var Signal = {
     BaseSignal.prototype.connect = function(slotFn, receiver, sender) {
         var newSlot;
 
-        mark(receiver);
-        mark(sender);
+        markObj(receiver);
+        markObj(sender);
 
         newSlot = new Slot(slotFn, receiver, sender);
 
         if (!Signal.allowDuplicateSlots) {
-            for (var i = this.slots.length; i >= 0; i--) {
+            for (var i = this.slots.length - 1; i >= 0; i--) {
                 if (this.slots[i].isEqual(newSlot)) {
                     return this.slots[i];
                 }
@@ -184,5 +195,8 @@ var Signal = {
         return ret ? ret[0] : null;
     };
 
+    Signal.markObj = markObj;
+    Signal.unmarkObj = unmarkObj;
+    Signal.Slot = Slot;
     Signal.BaseSignal = BaseSignal;
 })();
