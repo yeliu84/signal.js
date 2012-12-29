@@ -1,13 +1,16 @@
-var Signal = {
-    __version__: '0.0.1',
-    __ver__: [0, 0, 1],
-    __author__: 'Ye Liu',
-    __contact__: 'yeliu@instast.com',
-    __license__: 'BSD',
-    __copyright__: 'Copyright (c) 2012 Ye Liu'
-};
+;(function(global) {
+    var prevSignal = global.Signal;
 
-(function() {
+    var Signal = global.Signal = {
+        __version__: '0.0.1',
+        __license__: 'BSD',
+    };
+
+    Signal.noConflict = function() {
+        global.Signal = prevSignal;
+        return this;
+    };
+
     /* ----- User Configurable Properties ----- */
 
     Signal.allowDuplicateSlots = false;
@@ -19,10 +22,9 @@ var Signal = {
         return true;
     };
 
-
     /* ----- General Helper Functions ----- */
 
-    function emptyFn() {}
+    var emptyFn = function() {}
 
     var toString = Object.prototype.toString;
 
@@ -50,11 +52,11 @@ var Signal = {
         return toString.call(o) === '[object Array]';
     };
 
-    function isNumber(o) {
+    var isNumber = function(o) {
         return typeof o === 'number' && isFinite(o);
-    }
+    };
 
-    function argumentsToArray(a) {
+    var argumentsToArray = function(a) {
         var args = [];
 
         a = a || [];
@@ -64,47 +66,47 @@ var Signal = {
         }
 
         return args;
-    }
+    };
 
 
     /* ----- Helper Functions ----- */
 
     var objIdSeq = 1;
 
-    function markObj(o) {
+    var markObj = Signal.markObj = function(o) {
         if (isObject(o) && !o._signalObjId) {
             o._signalObjId = objIdSeq++;
         }
         return o;
-    }
+    };
 
-    function unmarkObj(o) {
+    var unmarkObj = Signal.unmarkObj = function(o) {
         if (isObject(o)) {
             delete o._signalObjId;
         }
         return o;
-    }
+    };
 
-    function compareObj(x, y) {
+    var compareObj = function(x, y) {
         if (isObject(x) && isObject(y)) {
             if (x._signalObjId && y._signalObjId) {
                 return x._signalObjId === y._signalObjId;
             }
         }
         return x === y;
-    }
+    };
 
 
     /* ----- Slot ----- */
 
     var slotIdSeq = 0;
 
-    function Slot(fn, receiver, sender) {
+    var Slot = Signal.Slot = function(fn, receiver, sender) {
         this.id = slotIdSeq++;
         this._fn = fn || emptyFn;
         this._receiver = receiver || null;
         this._sender = sender || null;
-    }
+    };
 
     Slot.prototype.call = function() {
         return this._fn.apply(this._receiver, arguments);
@@ -154,9 +156,9 @@ var Signal = {
 
     /* ----- BaseSignal ----- */
 
-    function BaseSignal() {
+    var BaseSignal = Signal.BaseSignal = function() {
         this.slots = [];
-    }
+    };
 
     BaseSignal.prototype.connect = function(slotFn, receiver, sender) {
         var newSlot;
@@ -223,7 +225,7 @@ var Signal = {
 
     var signals = {};
 
-    function create(name) {
+    var create = Signal.create = function(name) {
         var signal = null;
 
         if (name === undefined || name === null) {
@@ -238,9 +240,9 @@ var Signal = {
         }
 
         return signal;
-    }
+    };
 
-    function connect(name, slotFn, receiver, sender) {
+    var connect = Signal.connect = function(name, slotFn, receiver, sender) {
         var signal = create(name);
 
         if (signal) {
@@ -248,9 +250,9 @@ var Signal = {
         }
 
         return null;
-    }
+    };
 
-    function disconnect(name, slotFn, receiver, sender) {
+    var disconnect = Signal.disconnect = function(name, slotFn, receiver, sender) {
         var signal = create(name);
 
         if (signal) {
@@ -258,9 +260,9 @@ var Signal = {
         }
 
         return null;
-    }
+    };
 
-    function disconnectBySlot(name, slot) {
+    var disconnectBySlot = Signal.disconnectBySlot = function(name, slot) {
         var signal = create(name);
 
         if (signal) {
@@ -268,9 +270,9 @@ var Signal = {
         }
 
         return null;
-    }
+    };
 
-    function emit(name) {
+    var emit = Signal.emit = function(name) {
         var signal = create(name);
         var args;
 
@@ -282,9 +284,9 @@ var Signal = {
         args.shift();
 
         signal.emit.apply(signal, args);
-    }
+    };
 
-    function asyncEmit(name) {
+    var asyncEmit = Signal.asyncEmit = function(name) {
         var signal = create(name);
         var args;
 
@@ -296,16 +298,5 @@ var Signal = {
         args.shift();
 
         signal.asyncEmit.apply(signal, args);
-    }
-
-    Signal.Slot = Slot;
-    Signal.BaseSignal = BaseSignal;
-    Signal.create = create;
-    Signal.connect = connect;
-    Signal.disconnect = disconnect;
-    Signal.disconnectBySlot = disconnectBySlot;
-    Signal.emit = emit;
-    Signal.asyncEmit = asyncEmit;
-    Signal.markObj = markObj;
-    Signal.unmarkObj = unmarkObj;
-})();
+    };
+})(this);
