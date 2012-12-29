@@ -367,7 +367,7 @@ describe('Signal.BaseSignal', function() {
         expect(fn).not.toHaveBeenCalled();
     });
 
-    it('calls the callback function when invoking emitAsync()', function() {
+    it('calls the callback function when invoking asyncEmit()', function() {
         var receiver = new ReceiverClass();
         var sender = new SenderClass();
         var flag = false;
@@ -380,7 +380,7 @@ describe('Signal.BaseSignal', function() {
         signal.connect(receiver.fn, receiver, sender);
 
         runs(function() {
-            signal.emitAsync(sender);
+            signal.asyncEmit(sender);
         });
 
         waitsFor(function() {
@@ -388,8 +388,180 @@ describe('Signal.BaseSignal', function() {
         }, 'The callback should be called', 50);
 
         runs(function() {
-            expect(receiver.fn).toHaveBeenCalled();
+            expect(receiver.fn).toHaveBeenCalledWith(sender);
         });
+    });
+});
+
+describe('Signal.create', function() {
+    it('is defined', function() {
+        expect(Signal.create).toBeDefined();
+    });
+
+    it('creates signal instance', function() {
+        var signal = Signal.create('TestSignal');
+
+        expect(signal instanceof Signal.BaseSignal).toBe(true);
+    });
+
+    it('caches signal instance so there is no duplicate signals', function() {
+        var signal1 = Signal.create('TestSignal');
+        var signal2 = Signal.create('TestSignal');
+
+        expect(signal1).toBe(signal2);
+    });
+
+    it('returns null if there is no name provided', function() {
+        expect(Signal.create()).toBeNull();
+    });
+});
+
+describe('Signal.connect', function() {
+    it('is defined', function() {
+        expect(Signal.connect).toBeDefined();
+    });
+
+    it('calls Signal.BaseSignal.connect with correct arguments', function() {
+        var signal = Signal.create('test');
+        var f = function() {};
+        var r = {};
+        var s = {};
+
+        spyOn(signal, 'connect');
+
+        Signal.connect('test', f, r, s);
+        expect(signal.connect).toHaveBeenCalledWith(f, r, s);
+    });
+
+    it('returns an instance of Signal.Slot', function() {
+        var signal = Signal.create('test');
+        var f = function() {};
+        var r = {};
+        var s = {};
+        var slot = Signal.connect('test', f, r, s);
+        expect(slot instanceof Signal.Slot).toBe(true);
+    });
+
+    it('returns null if no signal name provided', function() {
+        var slot = Signal.connect();
+        expect(slot).toBeNull();
+    });
+});
+
+describe('Signal.disconnect', function() {
+    it('is defined', function() {
+        expect(Signal.disconnect).toBeDefined();
+    });
+
+    it('calls Signal.BaseSignal.disconnect with correct arguments', function() {
+        var signal = Signal.create('test');
+        var f = function() {};
+        var r = {};
+        var s = {};
+
+        spyOn(signal, 'disconnect');
+
+        Signal.disconnect('test', f, r, s);
+        expect(signal.disconnect).toHaveBeenCalledWith(f, r, s);
+    });
+
+    it('returns the removed instance of Signal.Slot', function() {
+        var signal = Signal.create('test');
+        var f = function() {};
+        var r = {};
+        var s = {};
+        var added = Signal.connect('test', f, r, s);
+        var removed = Signal.disconnect('test', f, r, s);
+
+        expect(removed).toBe(added);
+    });
+
+    it('returns null if no signal name provided', function() {
+        var slot = Signal.disconnect();
+        expect(slot).toBeNull();
+    });
+});
+
+describe('Signal.disconnectBySlot', function() {
+    it('is defined', function() {
+        expect(Signal.disconnectBySlot).toBeDefined();
+    });
+
+    it('calls Signal.BaseSignal.disconnectBySlot with correct arguments', function() {
+        var signal = Signal.create('test');
+        var slot = {};
+
+        spyOn(signal, 'disconnectBySlot');
+
+        Signal.disconnectBySlot('test', slot);
+        expect(signal.disconnectBySlot).toHaveBeenCalledWith(slot);
+    });
+
+    it('returns the removed instance of Signal.Slot', function() {
+        var signal = Signal.create('test');
+        var f = function() {};
+        var r = {};
+        var s = {};
+        var added = Signal.connect('test', f, r, s);
+        var removed = Signal.disconnectBySlot('test', added);
+
+        expect(removed).toBe(added);
+    });
+
+    it('returns null if no signal name provided', function() {
+        var slot = Signal.disconnectBySlot();
+
+        expect(slot).toBeNull();
+    });
+});
+
+describe('Signal.emit', function() {
+    it('is defined', function() {
+        expect(Signal.emit).toBeDefined();
+    });
+
+    it('calls Signal.BaseSignal.emit with correct arguments', function() {
+        var signal = Signal.create('test');
+        var sender = {};
+
+        spyOn(signal, 'emit');
+
+        Signal.emit('test', sender, true, 'a', [1, 2, 3]);
+        expect(signal.emit).toHaveBeenCalledWith(sender, true, 'a', [1, 2, 3]);
+    });
+
+    it('does nothing if no signal name provided', function() {
+        var signal = Signal.create('test');
+
+        spyOn(signal, 'emit');
+
+        Signal.emit();
+        expect(signal.emit).not.toHaveBeenCalled();
+    });
+});
+
+describe('Signal.asyncEmit', function() {
+    it('is defined', function() {
+        expect(Signal.asyncEmit).toBeDefined();
+    });
+
+    it('calls Signal.BaseSignal.asyncEmit with correct arguments', function() {
+        var signal = Signal.create('test');
+        var sender = {};
+
+        spyOn(signal, 'asyncEmit');
+
+        Signal.asyncEmit('test', sender, true, 'a', [1, 2, 3]);
+        expect(signal.asyncEmit).toHaveBeenCalledWith(sender, true, 'a', [1, 2, 3]);
+    });
+
+    it('does nothing if no signal name provided', function() {
+        var signal = Signal.create('test');
+
+        spyOn(signal, 'asyncEmit');
+
+        Signal.asyncEmit();
+        expect(signal.asyncEmit).not.toHaveBeenCalled();
     });
 });
 

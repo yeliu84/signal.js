@@ -12,12 +12,17 @@ var Signal = {
 
     Signal.allowDuplicateSlots = false;
 
-    Signal.isSenderCompatible = function(x, y) {
-        return x === y;
+    Signal.isSenderCompatible = function(expected, actual) {
+        if (expected !== undefined && expected !== null) {
+            return expected === actual;
+        }
+        return true;
     };
 
 
     /* ----- General Helper Functions ----- */
+
+    function emptyFn() {}
 
     var toString = Object.prototype.toString;
 
@@ -26,22 +31,40 @@ var Signal = {
      * http://docs.sencha.com/ext-js/4-1/source/Ext.html for details.
      */
     var isObject = (toString.call(null) === '[object Object]') ?
-    function(o) {
+    function isObject(o) {
         return o !== null && o !== undefined && toString.call(o) === '[object Object]';
     } :
-    function(o) {
+    function isObject(o) {
         return toString.call(o) === '[object Object]';
     };
 
     var isFunction = (document !== undefined && typeof document.getElementsByTagName('body') === 'function') ?
-    function(o) {
+    function isFunction(o) {
         return toString.call(o) === '[object Function]';
     } :
-    function(o) {
+    function isFunction(o) {
         return typeof o === 'function';
     };
 
-    function emptyFn() {}
+    var isArray = ('isArray' in Array) ? Array.isArray : function isArray(o) {
+        return toString.call(o) === '[object Array]';
+    };
+
+    function isNumber(o) {
+        return typeof o === 'number' && isFinite(o);
+    }
+
+    function argumentsToArray(a) {
+        var args = [];
+
+        a = a || [];
+
+        for (var i = 0; i < a.length; i++) {
+            args[i] = a[i];
+        }
+
+        return args;
+    }
 
 
     /* ----- Helper Functions ----- */
@@ -166,7 +189,7 @@ var Signal = {
         }
     };
 
-    BaseSignal.prototype.emitAsync = function(sender) {
+    BaseSignal.prototype.asyncEmit = function(sender) {
         var self = this;
         var args = arguments;
 
@@ -195,8 +218,94 @@ var Signal = {
         return ret ? ret[0] : null;
     };
 
-    Signal.markObj = markObj;
-    Signal.unmarkObj = unmarkObj;
+
+    /* ----- Convenient Functions ----- */
+
+    var signals = {};
+
+    function create(name) {
+        var signal = null;
+
+        if (name === undefined || name === null) {
+            return signal;
+        }
+
+        if (name in signals) {
+            signal = signals[name];
+        }
+        else {
+            signal = signals[name] = new BaseSignal();
+        }
+
+        return signal;
+    }
+
+    function connect(name, slotFn, receiver, sender) {
+        var signal = create(name);
+
+        if (signal) {
+            return signal.connect(slotFn, receiver, sender);
+        }
+
+        return null;
+    }
+
+    function disconnect(name, slotFn, receiver, sender) {
+        var signal = create(name);
+
+        if (signal) {
+            return signal.disconnect(slotFn, receiver, sender);
+        }
+
+        return null;
+    }
+
+    function disconnectBySlot(name, slot) {
+        var signal = create(name);
+
+        if (signal) {
+            return signal.disconnectBySlot(slot);
+        }
+
+        return null;
+    }
+
+    function emit(name) {
+        var signal = create(name);
+        var args;
+
+        if (!signal) {
+            return;
+        }
+        
+        args = argumentsToArray(arguments);
+        args.shift();
+
+        signal.emit.apply(signal, args);
+    }
+
+    function asyncEmit(name) {
+        var signal = create(name);
+        var args;
+
+        if (!signal) {
+            return;
+        }
+        
+        args = argumentsToArray(arguments);
+        args.shift();
+
+        signal.asyncEmit.apply(signal, args);
+    }
+
     Signal.Slot = Slot;
     Signal.BaseSignal = BaseSignal;
+    Signal.create = create;
+    Signal.connect = connect;
+    Signal.disconnect = disconnect;
+    Signal.disconnectBySlot = disconnectBySlot;
+    Signal.emit = emit;
+    Signal.asyncEmit = asyncEmit;
+    Signal.markObj = markObj;
+    Signal.unmarkObj = unmarkObj;
 })();
