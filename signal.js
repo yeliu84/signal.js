@@ -3,7 +3,10 @@
 
     var Signal = global.Signal = {
         __version__: '0.0.1',
-        __license__: 'BSD'
+        __license__: 'BSD',
+        __author__: 'Ye Liu',
+        __contact__: 'yeliu@instast.com',
+        __copyright__: 'Copyright (c) 2012 Ye Liu'
     };
 
     Signal.noConflict = function() {
@@ -28,10 +31,6 @@
 
     var toString = Object.prototype.toString;
 
-    /*
-     * The following `isX` functions are copied from ExtJS 4.1, see
-     * http://docs.sencha.com/ext-js/4-1/source/Ext.html for details.
-     */
     var isObject = (toString.call(null) === '[object Object]') ?
     function isObject(o) {
         return (o !== null && o !== undefined &&
