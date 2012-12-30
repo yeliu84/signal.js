@@ -3,7 +3,7 @@
 
     var Signal = global.Signal = {
         __version__: '0.0.1',
-        __license__: 'BSD',
+        __license__: 'BSD'
     };
 
     Signal.noConflict = function() {
@@ -34,13 +34,15 @@
      */
     var isObject = (toString.call(null) === '[object Object]') ?
     function isObject(o) {
-        return o !== null && o !== undefined && toString.call(o) === '[object Object]';
+        return (o !== null && o !== undefined &&
+            toString.call(o) === '[object Object]');
     } :
     function isObject(o) {
         return toString.call(o) === '[object Object]';
     };
 
-    var isFunction = (document !== undefined && typeof document.getElementsByTagName('body') === 'function') ?
+    var isFunction = (document !== undefined &&
+        typeof document.getElementsByTagName('body') === 'function') ?
     function isFunction(o) {
         return toString.call(o) === '[object Function]';
     } :
@@ -142,11 +144,13 @@
             return false;
         }
 
-        if (isFunction(compareReceiver) && !compareReceiver(this._receiver, o._receiver)) {
+        if (isFunction(compareReceiver) &&
+                !compareReceiver(this._receiver, o._receiver)) {
             return false;
         }
 
-        if (isFunction(compareSender) && !compareSender(this._sender, o._sender)) {
+        if (isFunction(compareSender) &&
+                !compareSender(this._sender, o._sender)) {
             return false;
         }
 
@@ -252,7 +256,8 @@
         return null;
     };
 
-    var disconnect = Signal.disconnect = function(name, slotFn, receiver, sender) {
+    var disconnect = Signal.disconnect = function(name,
+            slotFn, receiver, sender) {
         var signal = create(name);
 
         if (signal) {
