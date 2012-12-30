@@ -1,14 +1,15 @@
 builddir := build
 src := signal.js
-minified := $(builddir)/signal.min.js
-minifytmp := $(minified).tmp
 
 version := $(shell sed -n "s/^.*__version__[ ]*:[ ]*'\(.*\)'.*$$/\1/ p" $(src))
 license := $(shell sed -n "s/^.*__license__[ ]*:[ ]*'\(.*\)'.*$$/\1/ p" $(src))
 copyright := $(shell sed -n "s/^.*__copyright__[ ]*:[ ]*'\(.*\)'.*$$/\1/ p" $(src))
 
-all: minify header combine
-remote: minify-remote header combine
+minified := $(builddir)/signal-$(version).min.js
+minifytmp := $(minified).tmp
+
+all: prep minify header combine
+remote: prep minify-remote header combine
 
 minify:
 	@which -s closure-compiler
@@ -27,6 +28,11 @@ minify-remote:
 		-d output_format=text \
 		--data-urlencode js_code@$(src) \
 		-o $(minifytmp)
+
+prep:
+	@if [ ! -d "$(builddir)" ]; then \
+		mkdir -p "$(builddir)"; \
+	fi
 
 header:
 	@echo '/*'                                             > $(minified)
