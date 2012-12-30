@@ -31,31 +31,32 @@
 
     var toString = Object.prototype.toString;
 
-    var isObject = (toString.call(null) === '[object Object]') ?
-    function isObject(o) {
-        return (o !== null && o !== undefined &&
-            toString.call(o) === '[object Object]');
-    } :
-    function isObject(o) {
-        return toString.call(o) === '[object Object]';
-    };
+    var isObject;
 
-    var isFunction = (document !== undefined &&
-        typeof document.getElementsByTagName('body') === 'function') ?
-    function isFunction(o) {
-        return toString.call(o) === '[object Function]';
-    } :
-    function isFunction(o) {
-        return typeof o === 'function';
-    };
+    if (toString.call(null) === '[object Object]') {
+        isObject = function (o) {
+            return (o !== null && o !== undefined &&
+                toString.call(o) === '[object Object]');
+        };
+    }
+    else {
+        isObject = function(o) {
+            return toString.call(o) === '[object Object]';
+        };
+    }
 
-    var isArray = ('isArray' in Array) ? Array.isArray : function isArray(o) {
-        return toString.call(o) === '[object Array]';
-    };
+    var isFunction;
 
-    var isNumber = function(o) {
-        return typeof o === 'number' && isFinite(o);
-    };
+    if (document !== undefined &&
+            typeof document.getElementsByTagName('body') === 'function') {
+        isFunction = function(o) {
+            return toString.call(o) === '[object Function]';
+        };
+    else {
+        isFunction = function(o) {
+            return typeof o === 'function';
+        };
+    }
 
     var argumentsToArray = function(a) {
         var args = [];
@@ -78,6 +79,7 @@
         if (isObject(o) && !o._signalObjId) {
             o._signalObjId = objIdSeq++;
         }
+
         return o;
     };
 
@@ -85,6 +87,7 @@
         if (isObject(o)) {
             delete o._signalObjId;
         }
+
         return o;
     };
 
@@ -94,6 +97,7 @@
                 return x._signalObjId === y._signalObjId;
             }
         }
+
         return x === y;
     };
 
@@ -127,6 +131,7 @@
         if (isFunction(isSenderCompatible)) {
             return isSenderCompatible(this._sender, sender);
         }
+
         return this._sender === sender;
     };
 
@@ -180,6 +185,7 @@
         }
 
         this.slots.push(newSlot);
+
         return newSlot;
     };
 
