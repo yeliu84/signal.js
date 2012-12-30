@@ -2,7 +2,7 @@
     var prevSignal = global.Signal;
 
     var Signal = global.Signal = {
-        __version__: '0.0.1',
+        __version__: '0.1.0',
         __license__: 'BSD',
         __author__: 'Ye Liu',
         __contact__: 'yeliu@instast.com',
@@ -52,6 +52,7 @@
         isFunction = function(o) {
             return toString.call(o) === '[object Function]';
         };
+    }
     else {
         isFunction = function(o) {
             return typeof o === 'function';
