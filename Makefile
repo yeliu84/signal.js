@@ -5,56 +5,59 @@ version := $(shell sed -n "s/^.*__version__[ ]*:[ ]*'\(.*\)'.*$$/\1/ p" $(src))
 license := $(shell sed -n "s/^.*__license__[ ]*:[ ]*'\(.*\)'.*$$/\1/ p" $(src))
 copyright := $(shell sed -n "s/^.*__copyright__[ ]*:[ ]*'\(.*\)'.*$$/\1/ p" $(src))
 
-minified := $(builddir)/signal-$(version).min.js
-minifytmp := $(minified).tmp
+minified-js := $(builddir)/signal-$(version).min.js
+minified-tmp := $(minified-js).tmp
 
-all: prep minify header combine
-remote: prep minify-remote header combine
+all: minify header combine
+remote: minify-remote header combine
 
-minify:
+minify: $(src) $(builddir)
 	@which -s closure-compiler
 	@if [ $$? -eq 0 ]; then \
 		echo 'Minifying $(src)...'; \
-		closure-compiler --js $(src) --js_output_file $(minifytmp); \
+		closure-compiler --js "$(src)" --js_output_file $(minified-tmp); \
 	else \
 		echo 'closure-compiler is not installed or not in PATH'; \
 	fi
 
-minify-remote:
+minify-remote: $(src) $(builddir)
 	@echo 'Minifying $(src)...'
 	@curl 'http://closure-compiler.appspot.com/compile' --progress-bar \
 		-d compilation_level=SIMPLE_OPTIMIZATIONS \
 		-d output_info=compiled_code \
 		-d output_format=text \
 		--data-urlencode js_code@$(src) \
-		-o $(minifytmp)
+		-o $(minified-tmp)
 
-prep:
-	@if [ ! -d "$(builddir)" ]; then \
-		mkdir -p "$(builddir)"; \
-	fi
+$(builddir):
+	@mkdir -p "$(builddir)"
 
 header:
-	@echo '/*'                                             > $(minified)
-	@echo ' * SignalJS - Signals and Slots in JavaScript' >> $(minified)
-	@echo ' *'                                            >> $(minified)
-	@echo ' * Version:  $(version)'                       >> $(minified)
-	@echo ' * License:  $(license)'                       >> $(minified)
-	@echo ' * Build on: $(shell date -u)'                 >> $(minified)
-	@echo ' *'                                            >> $(minified)
-	@echo ' * $(copyright)'                               >> $(minified)
-	@echo ' */'                                           >> $(minified)
+	@echo '/*'                                             > $(minified-js)
+	@echo ' * SignalJS - Signals and Slots in JavaScript' >> $(minified-js)
+	@echo ' *'                                            >> $(minified-js)
+	@echo ' * Version:  $(version)'                       >> $(minified-js)
+	@echo ' * License:  $(license)'                       >> $(minified-js)
+	@echo ' * Build on: $(shell date -u)'                 >> $(minified-js)
+	@echo ' *'                                            >> $(minified-js)
+	@echo ' * $(copyright)'                               >> $(minified-js)
+	@echo ' */'                                           >> $(minified-js)
 
 combine:
-	@if [ -f "$(minifytmp)" ]; then \
-		grep -q '__version__' "$(minifytmp)"; \
+	@if [ -f "$(minified-tmp)" ]; then \
+		grep -q '__version__' "$(minified-tmp)"; \
 		if [ $$? -eq 0 ]; then \
-			cat $(minifytmp) >> $(minified); \
+			cat $(minified-tmp) >> $(minified-js); \
 		else \
 			echo 'Minifying seems failed, the output is:'; \
-			cat "$(minifytmp)"; \
+			cat "$(minified-tmp)"; \
 		fi; \
-		rm "$(minifytmp)"; \
+		rm "$(minified-tmp)"; \
 	else \
-		echo "$(minifytmp) does not exist"; \
+		echo "$(minified-tmp) does not exist"; \
 	fi
+
+clean:
+	rm -rf build/*
+
+.PHONY: all remote minify minify-remote header combine clean
