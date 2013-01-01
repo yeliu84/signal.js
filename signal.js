@@ -6,7 +6,7 @@
         __license__: 'BSD',
         __author__: 'Ye Liu',
         __contact__: 'yeliu@instast.com',
-        __copyright__: 'Copyright (c) 2012 Ye Liu'
+        __copyright__: 'Copyright (c) 2013 Ye Liu'
     };
 
     Signal.noConflict = function() {
