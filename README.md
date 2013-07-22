@@ -48,5 +48,7 @@ the following few steps to accomplish the task:
 
 5. That's it!
 
+[Live DEMO](http://plnkr.co/edit/pGs57j)
+
 ## How to Run Tests
 TODO
