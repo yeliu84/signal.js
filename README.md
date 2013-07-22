@@ -6,9 +6,9 @@ SignalJS is a minimalist implementation of [signals/slots system][1] in JavaScri
 
 ## How to Use
 
-Say I have an app called MyApp, it has two objects MyApp.X and MyApp.Y. MyApp.Y
-wants to be notified if there are some events happened on MyApp.X. I just need
-the following few steps to accomplish the task:
+Say I have an app called *MyApp*, it has two objects `MyApp.X` and `MyApp.Y`.
+Now, `MyApp.Y` wants to be notified if there are some events happened on
+`MyApp.X`. To accomplish this task, I just need the following few steps:
 
 1. Clone this repo and add `signal.js` to my HTML
 
@@ -17,13 +17,13 @@ the following few steps to accomplish the task:
     ```
 
 2. Create a signal and attach it to `MyApp` namespace, so it can be accessed by
-   both MyApp.X and MyApp.Y
+   both `MyApp.X` and `MyApp.Y`
 
     ```javascript
     MyApp.dummySignal = Signal.create('dummySignal');
     ```
 
-3. Connect to the just created signal in MyApp.Y
+3. Connect `MyApp.Y` to the just created signal
 
     ```javascript
     MyApp.Y.signalHandler = function(sender, data) {
@@ -33,7 +33,7 @@ the following few steps to accomplish the task:
     MyApp.dummySignal.connect(MyApp.Y.signalHandler, MyApp.Y);
     ```
 
-4. Emit the signal when some event is happened on MyApp.X
+4. Let `MyApp.X` send the signal when some event is happened
 
     ```javascript
     MyApp.X.http.get('/data').
