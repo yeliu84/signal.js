@@ -49,6 +49,3 @@ Now, `MyApp.Y` wants to be notified if there are some events happened on
 5. That's it!
 
 [Live DEMO](http://plnkr.co/edit/pGs57j?p=preview)
-
-## How to Run Tests
-TODO
