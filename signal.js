@@ -1,8 +1,8 @@
-;(function(global) {
+(function(global) {
     var prevSignal = global.Signal;
 
-    var Signal = global.Signal = {
-        __version__: '0.1.0',
+    var Signal = {
+        __version__: '0.1.1',
         __license__: 'BSD',
         __author__: 'Ye Liu',
         __contact__: 'yeliu@instast.com',
@@ -38,8 +38,7 @@
             return (o !== null && o !== undefined &&
                 toString.call(o) === '[object Object]');
         };
-    }
-    else {
+    } else {
         isObject = function(o) {
             return toString.call(o) === '[object Object]';
         };
@@ -52,8 +51,7 @@
         isFunction = function(o) {
             return toString.call(o) === '[object Function]';
         };
-    }
-    else {
+    } else {
         isFunction = function(o) {
             return typeof o === 'function';
         };
@@ -221,8 +219,7 @@
         while (i < this.slots.length) {
             if (this.slots[i].isEqual(slot)) {
                 ret = this.slots.splice(i, 1);
-            }
-            else {
+            } else {
                 i++;
             }
         }
@@ -244,8 +241,7 @@
 
         if (name in signals) {
             signal = signals[name];
-        }
-        else {
+        } else {
             signal = signals[name] = new BaseSignal();
         }
 
@@ -310,4 +306,18 @@
 
         signal.asyncEmit.apply(signal, args);
     };
+
+    /* ----- Exports ----- */
+
+    if (typeof module !== 'undefined') {
+        for (var p in Signal) {
+            if (Signal.hasOwnProperty(p)) {
+                exports[p] = Signal[p];
+            }
+        }
+    } else if (typeof define !== 'undefined') {
+        define(Signal);
+    } else {
+        global.Signal = Signal;
+    }
 })(this);

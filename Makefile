@@ -64,9 +64,9 @@ karma := ./node_modules/.bin/karma
 karma_conf := karma.conf.js
 
 test:
-	$(karma) start $(karma_conf)
-
-test-single:
 	$(karma) start --single-run --no-auto-watch $(karma_conf)
 
-.PHONY: all remote minify minify-remote header combine clean
+start_test:
+	$(karma) start $(karma_conf)
+
+.PHONY: all remote minify minify-remote header combine clean test start_test
