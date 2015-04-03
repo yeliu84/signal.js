@@ -1,0 +1,29 @@
+{
+  "name": "signal.js",
+  "main": "signal.js",
+  "version": "0.1.3",
+  "homepage": "https://github.com/jaux/signal.js",
+  "authors": [
+    "Ye Liu <yeliu@instast.com>"
+  ],
+  "description": "SignalJS is an implementation of signals/slots system in JavaScript.",
+  "moduleType": [
+    "amd",
+    "globals",
+    "node"
+  ],
+  "keywords": [
+    "signal",
+    "signaljs",
+    "events"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "karma.conf.js",
+    "Makefile",
+    "spec.js",
+    "SpecRunner.html"
+  ]
+}
