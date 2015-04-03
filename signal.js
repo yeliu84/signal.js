@@ -2,11 +2,11 @@
     var prevSignal = global.Signal;
 
     var Signal = {
-        __version__: '0.1.1',
-        __license__: 'BSD',
+        __version__: '0.1.2',
+        __license__: 'MIT',
         __author__: 'Ye Liu',
         __contact__: 'yeliu@instast.com',
-        __copyright__: 'Copyright (c) 2013 Ye Liu'
+        __copyright__: 'Copyright (c) 2015 Ye Liu'
     };
 
     Signal.noConflict = function() {
@@ -286,7 +286,7 @@
         if (!signal) {
             return;
         }
-        
+
         args = argumentsToArray(arguments);
         args.shift();
 
@@ -300,7 +300,7 @@
         if (!signal) {
             return;
         }
-        
+
         args = argumentsToArray(arguments);
         args.shift();
 
@@ -310,11 +310,7 @@
     /* ----- Exports ----- */
 
     if (typeof module !== 'undefined') {
-        for (var p in Signal) {
-            if (Signal.hasOwnProperty(p)) {
-                exports[p] = Signal[p];
-            }
-        }
+        module.exports = Signal;
     } else if (typeof define !== 'undefined') {
         define(Signal);
     } else {
